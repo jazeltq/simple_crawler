@@ -18,6 +18,9 @@ class Util:
 # 打印行号
 p_l = Util.p_line
 
+# 安全打印
+p = Util.p
+
 class Singleton(object):
     """
     单件

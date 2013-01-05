@@ -14,7 +14,6 @@ class progress_info(threading.Thread):
         self.start()
         
     def run(self):
-        self.crawler.start()
         while True:
             if self.crawler.is_avaliable():
                 self.crawler.print_progress()
@@ -36,8 +35,8 @@ def main():
         
     myconfig.show_config()
     crawler = Crawler(myconfig)
-    p = progress_info(crawler)
-    p.join()
+    progress_info(crawler)
+    crawler.start()
     
 if __name__ == "__main__":
     main()

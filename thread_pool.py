@@ -7,9 +7,9 @@
  当工作队列添加了工作之后，可以激活线程继续工作
 """
 
-import threading
+import threading, traceback
 from Queue import Queue, Empty
-from util import p_l
+from util import p_l, p
 
 
 class A_thread(threading.Thread):
@@ -47,21 +47,22 @@ class A_thread(threading.Thread):
             except Exception, e:
                 self.fatal_error = True
                 # 走到这里说明，线程遇到不可知的错误
-                print ("%s: fatal error : %s" % (threading.current_thread().getName(), p_l()))
+                print ("%s: fatal error " % threading.current_thread().getName())
                 print ("*****%s" % e)
+                traceback.print_exc()
             finally:
                 if self.queue_empty:
                     # 工作队列中没有工作了，线程等待的数目加一
                     self._thread_pool.inc_thread_waiting_num()
                     # log
-                    print "%s has no job to do now" % threading.current_thread().getName()
-                    print( "没活干了" )
+                    #print "%s has no job to do now" % threading.current_thread().getName()
+                    #print( "没活干了" )
                     # 阻塞在没有工作的事件上
                     self._thread_pool.event_no_job()
                     # 从这里返回说明，有事件，这样等待工作的线程数目就可以减一
                     self._thread_pool.dec_thread_waiting_num()
                     self.queue_empty = False
-                    print( "我靠， 终于有活干了" )
+                    #print( "我靠， 终于有活干了" )
                 elif self.fatal_error:
                     if self.try_times > self._thread_pool.try_times:
                         self._status = "stop"

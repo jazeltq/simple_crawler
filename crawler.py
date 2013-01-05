@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #encoding:utf-8
 
-import threading, time, urllib2, urlparse, socket
+import threading, time, urllib2, urlparse, socket, sys, traceback
 
 from thread_pool import ThreadPool
 from bs4 import BeautifulSoup
@@ -105,14 +105,16 @@ class Crawler():
             # log
             # 无法获取 hrefs
             return
-        # 将hrefs添加到 temp_q中，等本级深度访问完毕之后再访问
-        for link in hrefs:
-            # 最后的考验
-            if not self.is_url_visited(link) \
-                        and link not in self.will_visited_urls \
-                        and link not in self.temp_q:
-                print "put %s into temp_q" % link 
-                self.temp_q.append(link)
+        # 如果获得了hrefs
+        if hrefs:
+            # 将hrefs添加到 temp_q中，等本级深度访问完毕之后再访问
+            for link in hrefs:
+                # 最后的考验
+                if not self.is_url_visited(link) \
+                            and link not in self.will_visited_urls \
+                            and link not in self.temp_q:
+                    #print "put %s into temp_q" % link 
+                    self.temp_q.append(link)
         
     def add_url_to_visited(self, url):
         # 
@@ -137,30 +139,45 @@ class Crawler():
         return a
     
     def get_hrefs(self, content, url):
-        url_p = urlparse.urlparse(url)
-        if url_p.netloc == "":
-            # url 是相对地址，或者无法解析出net location
-            raise StandardError("url urlpase result has nos no netloc")
-        hrefs = []
-        parser = self.get_parser()
-        parser.feed(content)
-        full_url = None
-        for link in parser.urls:
-            if link == "" or link == "#" or link == "javascript:void(0)":
-                continue
-            link_p = urlparse.urlparse(link)
-            if link_p.path.find('/') != 0 and link_p.path.find('./') != 0 and link_p.path('../') != 0:
-                continue
-            if link_p.scheme != 'http' and link_p.scheme != 'https':
-                continue
-            if link_p.netloc == "":
-                # 如果是相对地址
-                full_url = url_p.netloc + link
-            else:
-                full_url = link
-            # 添加到list中
-            hrefs.append(full_url)
-        raw_input("fdsafdsafds>>>>>")
+        try:
+            if content == None or content == "":
+                return;
+            url_p = urlparse.urlparse(url)
+            if url_p.netloc == "":
+                # url 是相对地址，或者无法解析出net location
+                #raise StandardError("url urlpase result has nos no netloc")
+                return
+            hrefs = []
+            parser = self.get_parser()
+            parser.feed(content)
+            full_url = None
+            for link in parser.urls:
+                if link == "" or link == "#" or link == "javascript:void(0)":
+                    continue
+                # 这里先过滤掉非url形式的字符串
+                # 因为parser解析的仅仅是a标签，所以不一定保证得到的就是
+                # url
+                if link.find('http') != 0 and link.find('https') != 0 and link.find('/') != 0 and link.find('./')!=0 and link.find('../')!= 0:
+                    continue
+                link_p = urlparse.urlparse(link)
+                if link_p.netloc == "":
+                    # 如果是相对地址
+                    full_url = url_p.netloc + link
+                else:
+                    full_url = link
+                # 添加到list中
+                #print full_url
+                hrefs.append(full_url)
+        except Exception, e:
+            traceback.print_exc()
+
+            f = sys.exc_info()[2].tb_frame.f_back
+            print (f.f_code.co_name, f.f_lineno)
+            print sys.exc_info()[2].tb_frame.f_code, ":", sys.exc_info()[2].tb_frame.f_lineno
+            print sys.exc_info()[2].tb_frame.f_exc_type, ":", sys.exc_info()[2].tb_frame.f_exc_value
+            print sys.exc_info()[2].tb_frame.f_lasti
+            print e
+        #raw_input("fdsafdsafds>>>>>")
         parser.close()
         return hrefs
     
