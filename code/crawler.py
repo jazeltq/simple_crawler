@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 #encoding:utf-8
 
-import threading, time, urllib2, urlparse, socket, sys, traceback
+import threading, time, urllib2, urlparse, socket, sys, traceback, logging
 
 from thread_pool import ThreadPool
-from bs4 import BeautifulSoup
 from Queue import Empty
 from collections import deque
 from sgmllib import SGMLParser, SGMLParseError
-from util import p_l
 from web_page import WebPage
 
+logger = None
 
 class Crawler():
     def __init__(self, myconfig):
@@ -233,6 +232,11 @@ class Crawler():
             print 'urls visited is ', self.get_url_visited()
             print 'thread working is', self.myconfig.thread - self.thread_pool.get_thread_waiting_num()
             print '================================'
+            
+    def custom_logger(self):
+        global logger
+        logger = logging.getLogger(self.myconfig.logfile)
+        logger.setLevel(self.myconfig.loglevel)
 
 class Parser(SGMLParser):
     """

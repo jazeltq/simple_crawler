@@ -31,5 +31,17 @@ class Singleton(object):
             return cls.objs[cls]
         cls.objs[cls] = object.__new__(cls)
         
+    
+def test():
+    import logging, traceback
+    try:
+        logger = logging.getLogger("test")
+        #logger.setLevel(3)
+        logger.info("hello")
+    except:
+        traceback.print_exc()
         
+        
+if __name__ == "__main__":
+    test()
     
