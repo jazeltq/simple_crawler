@@ -23,10 +23,11 @@ def main():
     myconfig = get_config()
     
     if myconfig == False:
+        # 解析参数出错，直接退出
         return
     
     if myconfig == None:
-        print "do not have any configuration, then siwtch testself truns on!"
+        print "do not have any configuration, then switch testself truns on!"
         myconfig = MyConfig()
         myconfig.testself = True
     
@@ -34,6 +35,8 @@ def main():
         # 如果 testself开关 trun on
         # 则 其它设置默认无效
         myconfig.do_default()
+    else:
+        myconfig.check_config()
     myconfig.show_config()
     crawler = Crawler(myconfig)
     progress_info(crawler)

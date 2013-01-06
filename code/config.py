@@ -34,7 +34,7 @@ class MyConfig(object):
     dbfile=""
     loglevel=0
     testself=False
-    thread=0
+    threadnum=0
     key=""
     
     @classmethod
@@ -45,7 +45,7 @@ class MyConfig(object):
         cls.dbfile = "sqlite.db"
         cls.loglevel = 3 # warning
         cls.testself = False
-        cls.thread = 10
+        cls.threadnum = 10
         cls.key = "HTML5"
         
     @classmethod
@@ -56,16 +56,36 @@ class MyConfig(object):
         cls.dbfile=""
         cls.loglevel=0
         cls.testself=False
-        cls.thread=0
+        cls.threadnum=0
         cls.key=""
         
     @classmethod
     def show_config(cls):
-        c = "url:%s depth:%d logfile:%s loglevel:%d dbfile:%s testself:%s thread:%d key:%s" % \
-            (cls.url, cls.depth, cls.logfile, cls.loglevel, cls.dbfile, cls.testself, cls.thread, cls.key)
-        print "your configuration:\n", c
-
-
+        c = "url:%s depth:%d logfile:%s loglevel:%d dbfile:%s testself:%s threadnum:%d key:%s" % \
+            (cls.url, cls.depth, cls.logfile, cls.loglevel, cls.dbfile, cls.testself, cls.threadnum, cls.key)
+        print "\nyour configuration:\n", c
+        
+    @classmethod
+    def check_config(cls):
+        """
+        主要目的是当从命令行没有获取相关的
+        参数的时候，可以配置成默认的
+        """
+        if cls.testself == True:
+            return
+        if cls.url == "":
+            cls.url = "http://www.iqiyi.com"
+        if cls.depth == 0:
+            cls.depth = 2
+        if cls.logfile == "":
+            cls.logfile = "spider.log"
+        if cls.loglevel == 0:
+            cls.loglevel = 3 # warning
+        if cls.threadnum == 0:
+            cls.threadnum = 10
+        if cls.key == "":
+            cls.key = "HTML5"
+            
 def get_config():
     """
     参数正确解析：返回Myconfig对象
@@ -74,8 +94,10 @@ def get_config():
     """
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'f:l:u:d:', ["key=", "testself", "dbfile=", "thread=", "help"])
-    except getopt.error:
-        usage()
+    except getopt.error, e:
+        print e
+        import traceback
+        traceback.print_exc()
         return False
     
     if len(opts) == 0:
@@ -114,19 +136,77 @@ def get_config():
             usage()
             # 直接返回
             return None
+        
     return MyConfig
 
 def test():
     a = MyConfig()
-    print a
-    print ">>>>>>>>>>>>>>>>"
+    print "do default>>>>>>>>>>>>>>>>"
     MyConfig.do_default()
     MyConfig.show_config()
     print a
-    print ">>>>>>>>>>>>>>>>"
+    print "clear config>>>>>>>>>>>>>>>>"
     MyConfig.clear_config()
-    myconfig = get_config()
-    myconfig.show_config()
+    MyConfig.show_config()
+    print "check config---------------"
+    MyConfig.clear_config()
+    MyConfig.check_config()
+    MyConfig.show_config()
+    print "test get_config-------"
+    # 不想每次都写参数，就这样赋值测试了
+    l = sys.argv
+    # test depth
+    l.append("-d")
+    l.append("5")
+    print "test -d 5", get_config().show_config()
+    # test logfile
+    del l[1:]
+    l.append("-f")
+    l.append("log_file")
+    MyConfig.clear_config()
+    print "test -f log_file", get_config().show_config()
+    
+    del l[1:]
+    l.append("-u")
+    l.append("http://www.iqiyi.com")
+    MyConfig.clear_config()
+    print "test -u http://www.iqiyi.com", get_config().show_config()
+    
+    del l[1:]
+    l.append("-l")
+    l.append("3")
+    MyConfig.clear_config()
+    print "test -l 3", get_config().show_config()
+    
+    del l[1:]
+    l.append("--key")
+    l.append("jfkldsajlkfd")
+    MyConfig.clear_config()
+    print "test --key jfkldsajlkfd", get_config().show_config()
+    
+    del l[1:]
+    l.append("--dbfile")
+    l.append("db.file")
+    MyConfig.clear_config()
+    print "test --dbfile db.file", get_config().show_config()
+    
+    del l[1:]
+    l.append("--thread")
+    l.append("13")
+    MyConfig.clear_config()
+    print "test --thread 13", get_config().show_config()
+    
+    del l[1:]
+    l.append("--testself")
+    MyConfig.clear_config()
+    print "test --testself", get_config().show_config()
+    
+    del l[1:]
+    opt_l = ["-u", "http://www.baidu.com", "-f", "log_file", "-d", "3", "-l", "3",
+             "--key", "HTML5", "--testself", "--dbfile", "test.db", "--thread", "12"]
+    l.extend(opt_l)
+    MyConfig.clear_config()
+    print "test all:", " ".join(opt_l), get_config().show_config()
     
 def _test():
     test()

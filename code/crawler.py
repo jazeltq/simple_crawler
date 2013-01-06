@@ -16,7 +16,7 @@ from database import Db
 class Crawler():
     def __init__(self, myconfig):
         # 线程池, 
-        self.thread_pool = ThreadPool(myconfig.thread)
+        self.thread_pool = ThreadPool(myconfig.threadnum)
         # 已访问的url集合
         self.visited_urls = set()
         # set 不是线程安全，所以这里加一把锁
@@ -69,7 +69,7 @@ class Crawler():
                 # 这样才算本次深度的抓取完毕
                 while True:
                     #print "thread waiting num is %d, config thread num is %d" % (self.thread_pool.get_thread_waiting_num(), self.myconfig.thread)
-                    if self.thread_pool.get_thread_waiting_num() == self.myconfig.thread:
+                    if self.thread_pool.get_thread_waiting_num() == self.myconfig.threadnum:
                         # 如果等待的线程数目等于线程初始数目，则说明，所有线程都执行完毕
                         # 所以break
                         break
@@ -230,7 +230,7 @@ class Crawler():
             print '================================='
             print 'Crawling depth is ', self.cur_depth
             print 'urls visited is ', self.get_url_visited()
-            print 'thread working is', self.myconfig.thread - self.thread_pool.get_thread_waiting_num()
+            print 'thread working is', self.myconfig.threadnum - self.thread_pool.get_thread_waiting_num()
             print 'url content matched number is', self.db.get_row_num()
             print '================================'
 
