@@ -28,8 +28,8 @@ class Crawler():
         self.cur_depth = 0
         self.status = ""
         self.myconfig = myconfig
-        #MyLogger(myconfig.logfile, myconfig.loglevel)
-        MyLogger(myconfig.logfile, loglevel = 5)
+        MyLogger(myconfig.logfile, myconfig.loglevel)
+        #MyLogger(myconfig.logfile, loglevel = 5)  # debug
         self.db = Db()
         
     
