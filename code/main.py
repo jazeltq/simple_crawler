@@ -22,17 +22,18 @@ class progress_info(threading.Thread):
 def main():
     myconfig = get_config()
     
+    if myconfig == False:
+        return
+    
     if myconfig == None:
         print "do not have any configuration, then siwtch testself truns on!"
         myconfig = MyConfig()
         myconfig.testself = True
     
-    crawler = None
     if myconfig.testself:
         # 如果 testself开关 trun on
         # 则 其它设置默认无效
         myconfig.do_default()
-        
     myconfig.show_config()
     crawler = Crawler(myconfig)
     progress_info(crawler)

@@ -67,9 +67,19 @@ class MyConfig(object):
 
 
 def get_config():
-    opts, args = getopt.getopt(sys.argv[1:], 'f:l:u:d:', ["key=", "testself", "dbfile=", "thread="])
+    """
+    参数正确解析：返回Myconfig对象
+    参数解析错误：返回False
+    没有参数返回: None
+    """
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'f:l:u:d:', ["key=", "testself", "dbfile=", "thread=", "help"])
+    except getopt.error:
+        usage()
+        return False
+    
     if len(opts) == 0:
-        return
+        return None
     for o, v in opts:
         if o == "-u":
             MyConfig.url = v
@@ -96,11 +106,14 @@ def get_config():
                 MyConfig.threadnum = int(v)
             else:
                 MyConfig.threadnum = 10
+        elif o == "--help":
+            usage()
+            return False
         else:
             print "Error, %s can not be used!" % o
             usage()
             # 直接返回
-            return False
+            return None
     return MyConfig
 
 def test():
