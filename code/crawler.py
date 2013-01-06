@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 #encoding:utf-8
 
-import threading, time, urllib2, urlparse, socket, sys, traceback, logging
+import threading, time, urllib2, urlparse
+import socket, traceback, logging
 
 from thread_pool import ThreadPool
 from Queue import Empty
 from collections import deque
 from sgmllib import SGMLParser, SGMLParseError
 from web_page import WebPage
+from my_logger import MyLogger
+from database import Db
 
-logger = None
 
 class Crawler():
     def __init__(self, myconfig):
@@ -26,6 +28,10 @@ class Crawler():
         self.cur_depth = 0
         self.status = ""
         self.myconfig = myconfig
+        #MyLogger(myconfig.logfile, myconfig.loglevel)
+        MyLogger(myconfig.logfile, loglevel = 5)
+        self.db = Db()
+        
     
     def start(self):
         self.status = "start"
@@ -53,9 +59,8 @@ class Crawler():
                 # 主动退出调度，让子线程有时间可以执行
                 time.sleep(3)
             except Empty:
-                # 需要访问的url没有了，这里不知道该做些什么好
-                pass
-                # log
+                # 需要访问的url没有了
+                logging.info("no url right now")
             finally:
                 
                 # 必须等线程池里的线程工作做完之后，才算本次深度的访问结束
@@ -74,10 +79,8 @@ class Crawler():
                         time.sleep(10)
                 #此次深度的访问结束，深度加一
                 self.cur_depth += 1
-                #print("****current depth is %d, press any enter to begin next level crawling***" % self.cur_depth)
-                #raw_input(">>>> waite for u press:")
+                logging.info("crawler depth now is %s" % str(self.cur_depth))
                 if self.cur_depth > self.myconfig.depth:
-                    #print "self.cur_depth is %d, stops normally" % self.cur_depth
                     break
                 # 从url中抓到的网页都放到了temp_q中,
                 # 将temp_q中的网页从新给 will_visited_urls，继续
@@ -87,19 +90,23 @@ class Crawler():
                 
         # 所有深度的url都抓取完毕 or 爬虫退出
         self.thread_pool.stop_threads()
+        logging.info("crawler exit")
         return
-        # log
+        
             
     def handler(self, url):
         content= self.get_html_content(url)
-        if content == "":
+        if content == "" or content == None:
             # 无法获取content，直接返回
             return
         # 添加此url为已访问过
         self.add_url_to_visited(url)
+        if content.find(self.myconfig.key) != -1:
+            self.db.save_data(url, self.myconfig.key, content)
         try:
             hrefs = self.get_hrefs(content, url)
         except StandardError, se:
+            logging.error("error: %s" % (se))
             print se
             # log
             # 无法获取 hrefs
@@ -169,14 +176,7 @@ class Crawler():
                 hrefs.append(full_url)
         except Exception, e:
             traceback.print_exc()
-
-            f = sys.exc_info()[2].tb_frame.f_back
-            print (f.f_code.co_name, f.f_lineno)
-            print sys.exc_info()[2].tb_frame.f_code, ":", sys.exc_info()[2].tb_frame.f_lineno
-            print sys.exc_info()[2].tb_frame.f_exc_type, ":", sys.exc_info()[2].tb_frame.f_exc_value
-            print sys.exc_info()[2].tb_frame.f_lasti
-            print e
-        #raw_input("fdsafdsafds>>>>>")
+            logging.error("exception:%s" % e)
         parser.close()
         return hrefs
     
@@ -231,12 +231,8 @@ class Crawler():
             print 'Crawling depth is ', self.cur_depth
             print 'urls visited is ', self.get_url_visited()
             print 'thread working is', self.myconfig.thread - self.thread_pool.get_thread_waiting_num()
+            print 'url content matched number is', self.db.get_row_num()
             print '================================'
-            
-    def custom_logger(self):
-        global logger
-        logger = logging.getLogger(self.myconfig.logfile)
-        logger.setLevel(self.myconfig.loglevel)
 
 class Parser(SGMLParser):
     """
@@ -253,18 +249,24 @@ class Parser(SGMLParser):
         try:
             SGMLParser.feed(self, data)
         except SGMLParseError, e:
-            print ">>>>>>>in parser got an exception", e
+            logging.error("parser meets an error:%s" % e)
             
 
 def __test():
     """
     具体的测试
     """
+    def print_result(c):
+        while True:
+            if c.is_avaliable():
+                c.print_progress()
+            time.sleep(3)
+            
     from config import MyConfig
     MyConfig.do_default()
     c = Crawler(MyConfig)
+    threading.Thread(group = None, target=print_result, args=(c,)).start()
     c.start()
-    print ">>>>>>>>>end"
 
 def _test():
     """
