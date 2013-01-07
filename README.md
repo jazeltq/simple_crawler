@@ -4,6 +4,7 @@ simple_crawler
 a simple crawler
 
 main.py 
+        
         -u url
 
         -d deep 
