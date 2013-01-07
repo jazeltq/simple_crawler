@@ -3,24 +3,11 @@ simple_crawler
 
 a simple crawler
 
-main.py 
+main.py  [ -u url ] [ -d deep ] [ -f logfile ] [-l 1-5 ] [ --testself ] [ --thread number ] [ --dbfile  filepath ]
+         [ --key=”HTML5” ]
+         
         
-        -u url
-
-        -d deep 
-        
-        -f logfile 
-        
-        -l loglevel(1-5)  
-        
-        --testself 
-        
-        --thread number 
-        
-        --dbfile  filepath  
-        
-        --key=”HTML5” 
-        
+         
     
         参数说明：
         
