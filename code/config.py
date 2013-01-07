@@ -5,7 +5,7 @@ import sys, getopt
 from util import Util
 
 def usage():
-    the_usage = """spider.py -u url -d deep -f logfile -l loglevel(1-5)  --testself --thread number --dbfile  filepath  --key=”HTML5” 
+    the_usage = """main.py -u url -d deep -f logfile -l loglevel(1-5)  --testself --thread number --dbfile  filepath  --key=”HTML5” 
     
         参数说明：
         
